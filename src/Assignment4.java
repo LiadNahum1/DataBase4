@@ -68,16 +68,11 @@ public class Assignment4 {
 
     public static void main(String[] args) {
         File file = new File(".");
-        //String csvFile = args[0];
+        String csvFile = args[0];
         String line = "";
         String cvsSplitBy = ",";
         Assignment4 ass = new Assignment4();
-        System.out.println(ass.getNumberOfParkingByArea());
-        //ass.getMostProfitableParkingAreas();
-        //ass.getNumberOfDistinctCarsByArea();
-        //ass.getNumberOfParkingByArea();
-        //todo erase
-      /*  try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
 
             while ((line = br.readLine()) != null) {
 
@@ -90,7 +85,7 @@ public class Assignment4 {
         } catch (IOException e) {
             e.printStackTrace();
 
-        } */
+        }
     }
 
     private void loadNeighborhoodsFromCsv(String csvPath) {
