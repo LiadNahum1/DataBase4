@@ -11,9 +11,11 @@ import java.util.ArrayList;
 
 public class Assignment4 {
     private DatabaseManager dM;
+    private DatabaseManager master;
     private String databaseName = "DB2019_Ass2";
     private Assignment4() {
         this.dM = new DatabaseManagerMSSQLServer(databaseName);
+        this.master = new DatabaseManagerMSSQLServer("dbmaster");
     }
 
    public static void executeFunc(Assignment4 ass, String[] args) {
@@ -53,6 +55,7 @@ public class Assignment4 {
                 System.out.println(ass.getNumberOfDistinctCarsByArea());
                 break;
             case "AddEmployee":
+                //args 4 in the format of yyyy-mm-dd
                 SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
                 ass.AddEmployee(Integer.parseInt(args[1]), args[2], args[3], java.sql.Date.valueOf(args[4]), args[5], Integer.parseInt(args[6]), Integer.parseInt(args[7]), args[8]);
                 break;
@@ -65,11 +68,16 @@ public class Assignment4 {
 
     public static void main(String[] args) {
         File file = new File(".");
-        String csvFile = args[0];
+        //String csvFile = args[0];
         String line = "";
         String cvsSplitBy = ",";
         Assignment4 ass = new Assignment4();
-        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+        System.out.println(ass.getNumberOfParkingByArea());
+        //ass.getMostProfitableParkingAreas();
+        //ass.getNumberOfDistinctCarsByArea();
+        //ass.getNumberOfParkingByArea();
+        //todo erase
+      /*  try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
 
             while ((line = br.readLine()) != null) {
 
@@ -82,7 +90,7 @@ public class Assignment4 {
         } catch (IOException e) {
             e.printStackTrace();
 
-        } 
+        } */
     }
 
     private void loadNeighborhoodsFromCsv(String csvPath) {
@@ -93,7 +101,7 @@ public class Assignment4 {
             while ((line = br.readLine()) != null) {
                 // use comma as separator
                 String[] row = line.split(cvsSplitBy);
-                dM.executeQuery("INSERT INTO Neighborhood VALUES(" + row[0]+ ",'" + row[1]+"')");
+                dM.executeQuery("INSERT INTO Neighborhood VALUES(" + row[0]+ ",'" + row[1]+"');");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -105,8 +113,8 @@ public class Assignment4 {
 
     private void updateEmployeeSalaries(double percentage) {
         dM.startConnection();
-        String query = "UPDATE [ConstructorEmployee] SET SalaryPerDay= SalaryPerDay*(100+" +
-                +percentage +")/100 WHERE EID IN (SELECT EID FROM ConstructionEmployeeOverFifty);";
+        String query = "UPDATE [ConstructorEmployee] SET SalaryPerDay= SalaryPerDay*(100+" +percentage +")/100 FROM [Employee] JOIN [ConstructorEmployee] ON Employee.EID=ConstructorEmployee.EID" +
+                " WHERE DATEDIFF(YEAR,Employee.BirthDate, GETDATE()) >= 50;";
         dM.executeQuery(query);
         dM.closeConnection();
     }
@@ -141,7 +149,7 @@ public class Assignment4 {
     private int getTotalProjectBudget() {
         int totalBudg=0;
         dM.startConnection();
-        String query ="SELECT SUM(Budget) AS Totalbudg FROM Project";
+        String query ="SELECT SUM(Budget) AS Totalbudg FROM Project;";
         ResultSet rs= dM.executeQuerySelect(query);
         try {
             if(rs.next()) {
@@ -155,10 +163,10 @@ public class Assignment4 {
         return totalBudg;
     }
     private void dropDB() {
-        dM.startConnection();
-        String query = "DROP DATABASE" + databaseName+";";
-        dM.executeQuery(query);
-        dM.closeConnection();
+        master.startConnection();
+        String query = "DROP DATABASE " + databaseName+";";
+        master.executeQuery(query);
+        master.closeConnection();
     }
 
     private void initDB(String csvPath) {
@@ -166,57 +174,61 @@ public class Assignment4 {
         String cvsSplitBy = ",";
         String file = "";
         String query="";
-        dM.startConnection();
+        master.startConnection();
         //sql file
         try (BufferedReader br = new BufferedReader(new FileReader(csvPath))) {
             while ((line = br.readLine()) != null) {
-                file = file + line;
+                //not a comment
+                if(!line.contains("--"))
+                    file = file + line;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(line != ""){
+        if(file != ""){
             //create database
-            String [] createDatabase = line.split("GO");
-            query = createDatabase[0] + "GO" + createDatabase[1] +"GO";
-            dM.executeQuery(query);
+            String [] createDatabase = file.split("GO");
+            query = createDatabase[0];
+            master.executeQuery(query);
+            query = createDatabase[1];
+            master.executeQuery(query);
             //create tables
-            line = createDatabase[2];
-            int indexOfQuery = line.indexOf("CREATE");
-            int indexOfEnd = line.indexOf(";");
+            file = createDatabase[2];
+            int indexOfQuery = file.indexOf("CREATE");
+            int indexOfEnd = file.indexOf(";");
             while(indexOfQuery != -1 & indexOfEnd != -1){
-                query = line.substring(indexOfQuery, indexOfEnd);
-                dM.executeQuery(query);
-                line.substring(indexOfEnd +1);
-                indexOfQuery = line.indexOf("CREATE");
-                indexOfEnd = line.indexOf(";");
+                query = file.substring(indexOfQuery, indexOfEnd);
+                master.executeQuery(query);
+                file = file.substring(indexOfEnd +1) + ";";
+                indexOfQuery = file.indexOf("CREATE");
+                indexOfEnd = file.indexOf(";");
             }
 
-            
+
         }
-        dM.closeConnection();
+        master.closeConnection();
     }
     private int calculateIncomeFromParking(int year) {
         dM.startConnection();
-        String query = "SELECT Sum(Cost) as sumC from CarParking WHERE YEAR(ENDTIME)=" +year +";";
+        String query = "SELECT Sum(Cost) as sumC from CarParking WHERE YEAR(ENDTIME)='" +year +"';";
         ResultSet st = dM.executeQuerySelect(query);
-        dM.closeConnection();
         int re = 0;
         try{
             if(st.next()) {
-                re =st.getInt("SumC");
+                re =st.getInt("sumC");
             }
         }
         catch(Exception e){
+            System.out.println(e.getMessage());
         }
+        dM.closeConnection();
         return re;
     }
 
     private ArrayList<Pair<Integer, Integer>> getMostProfitableParkingAreas() {
         dM.startConnection();
-        String query = "SELECT Top 5 ParkingAreaID, SUM(Cost) as price from [CarParking] GROUP BY (ParkingAreaID) ORDER BY price";
+        String query = "SELECT Top 5 ParkingAreaID, SUM(Cost) as price from [CarParking] GROUP BY (ParkingAreaID) ORDER BY price DESC";
         ResultSet rs = dM.executeQuerySelect(query);
-        dM.closeConnection();
         ArrayList<Pair<Integer, Integer>> al = new ArrayList<>();
         try {
             while (rs.next()) {
@@ -227,6 +239,7 @@ public class Assignment4 {
         catch (Exception e){
             return null;
         }
+        dM.closeConnection();
         return al;
     }
 
@@ -269,7 +282,7 @@ public class Assignment4 {
     private void AddEmployee(int EID, String LastName, String FirstName, Date BirthDate, String StreetName, int Number, int door, String City) {
         dM.startConnection();
         String query = "INSERT INTO Employee(EID,LastName,FirstName,BirthDate,StreetName,Number,door,City) VALUES" +
-                " (" +EID+ "," +LastName+ "," +BirthDate+"," +StreetName+"," +Number+"," +door+"," +City+ ");";
+                " (" +EID+ ",'" +LastName+ "','" + FirstName+"','" +BirthDate+"','" +StreetName+"'," +Number+"," +door+",'" +City+ "');";
         dM.executeQuery(query);
         dM.closeConnection();
     }
