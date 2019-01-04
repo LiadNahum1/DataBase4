@@ -191,6 +191,8 @@ public class Assignment4 {
                 indexOfQuery = line.indexOf("CREATE");
                 indexOfEnd = line.indexOf(";");
             }
+
+            
         }
         dM.closeConnection();
     }
