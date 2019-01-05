@@ -241,7 +241,8 @@ public class Assignment4 {
     private ArrayList<Pair<Integer, Integer>> getNumberOfParkingByArea() {
         ArrayList<Pair<Integer,Integer>> numberOfParkingByArea = new ArrayList<>();
         dM.startConnection();
-        String query ="SELECT ParkingAreaID, COUNT(*) AS numParking FROM CarParking GROUP BY ParkingAreaID ";
+        String query ="SELECT AID, COUNT(*) AS numParking FROM ParkingArea LEFT JOIN CarParking ON" +
+                "[ParkingArea].[AID] = [CarParking].[ParkingAreaID] GROUP BY AID";
         ResultSet rs= dM.executeQuerySelect(query);
         try {
             while (rs.next()) {
@@ -259,7 +260,8 @@ public class Assignment4 {
     private ArrayList<Pair<Integer, Integer>> getNumberOfDistinctCarsByArea() {
         ArrayList<Pair<Integer,Integer>> numberOfDistinctCars = new ArrayList<>();
         dM.startConnection();
-        String query ="SELECT ParkingAreaID, COUNT(DISTINCT CID) AS numCID FROM CarParking GROUP BY ParkingAreaID";
+        String query ="SELECT AID, COUNT(DISTINCT CID) AS numCID FROM ParkingArea LEFT JOIN CarParking ON" +
+                "[ParkingArea].[AID] = [CarParking].[ParkingAreaID] GROUP BY AID";
         ResultSet rs= dM.executeQuerySelect(query);
         try {
             while (rs.next()) {
