@@ -15,10 +15,10 @@ public class Assignment4 {
     private String databaseName = "DB2019_Ass2";
     private Assignment4() {
         this.dM = new DatabaseManagerMSSQLServer(databaseName);
-        this.master = new DatabaseManagerMSSQLServer("dbmaster");
+        this.master = new DatabaseManagerMSSQLServer("master");
     }
 
-   public static void executeFunc(Assignment4 ass, String[] args) {
+    public static void executeFunc(Assignment4 ass, String[] args) {
         String funcName = args[0];
         switch (funcName) {
             case "loadNeighborhoodsFromCsv":
@@ -55,7 +55,6 @@ public class Assignment4 {
                 System.out.println(ass.getNumberOfDistinctCarsByArea());
                 break;
             case "AddEmployee":
-                //args 4 in the format of yyyy-mm-dd
                 SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
                 ass.AddEmployee(Integer.parseInt(args[1]), args[2], args[3], java.sql.Date.valueOf(args[4]), args[5], Integer.parseInt(args[6]), Integer.parseInt(args[7]), args[8]);
                 break;
@@ -108,8 +107,9 @@ public class Assignment4 {
 
     private void updateEmployeeSalaries(double percentage) {
         dM.startConnection();
-        String query = "UPDATE [ConstructorEmployee] SET SalaryPerDay= SalaryPerDay*(100+" +percentage +")/100 FROM [Employee] JOIN [ConstructorEmployee] ON Employee.EID=ConstructorEmployee.EID" +
-                " WHERE DATEDIFF(YEAR,Employee.BirthDate, GETDATE()) >= 50;";
+        String query = "UPDATE [ConstructorEmployee] SET SalaryPerDay= SalaryPerDay*(100+" +percentage +")/100 WHERE ConstructorEmployee.EID IN" +
+                "(SELECT ConstructorEmployee.EID FROM [Employee] JOIN [ConstructorEmployee] ON Employee.EID=ConstructorEmployee.EID " +
+                "WHERE DATEDIFF(YEAR,Employee.BirthDate, GETDATE()) >= 50);";
         dM.executeQuery(query);
         dM.closeConnection();
     }
@@ -134,8 +134,7 @@ public class Assignment4 {
             }
         }
         catch(Exception e){
-            //TODO EARASE
-            System.out.println("Exception");
+            e.printStackTrace();
         }
         dM.closeConnection();
         return totalSal;
@@ -151,8 +150,8 @@ public class Assignment4 {
                 totalBudg= rs.getInt("TotalBudg");
             }
         }
-        catch(Exception e){//TODO EARASE
-            System.out.println("Exception");
+        catch(Exception e){
+            e.printStackTrace();
         }
         dM.closeConnection();
         return totalBudg;
@@ -175,7 +174,7 @@ public class Assignment4 {
             while ((line = br.readLine()) != null) {
                 //not a comment
                 if(!line.contains("--"))
-                    file = file + line;
+                    file = file + line + " ";
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -183,29 +182,15 @@ public class Assignment4 {
         if(file != ""){
             //create database
             String [] createDatabase = file.split("GO");
-            query = createDatabase[0];
-            master.executeQuery(query);
-            query = createDatabase[1];
-            master.executeQuery(query);
-            //create tables
-            file = createDatabase[2];
-            int indexOfQuery = file.indexOf("CREATE");
-            int indexOfEnd = file.indexOf(";");
-            while(indexOfQuery != -1 & indexOfEnd != -1){
-                query = file.substring(indexOfQuery, indexOfEnd);
-                master.executeQuery(query);
-                file = file.substring(indexOfEnd +1) + ";";
-                indexOfQuery = file.indexOf("CREATE");
-                indexOfEnd = file.indexOf(";");
+            for(String queries : createDatabase){
+                master.executeQuery(queries);
             }
-
-
         }
         master.closeConnection();
     }
     private int calculateIncomeFromParking(int year) {
         dM.startConnection();
-        String query = "SELECT Sum(Cost) as sumC from CarParking WHERE YEAR(ENDTIME)='" +year +"';";
+        String query = "SELECT Sum(Cost) as sumC from CarParking WHERE YEAR(ENDTIME)=" +year +";";
         ResultSet st = dM.executeQuerySelect(query);
         int re = 0;
         try{
@@ -214,7 +199,7 @@ public class Assignment4 {
             }
         }
         catch(Exception e){
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         dM.closeConnection();
         return re;
@@ -249,8 +234,8 @@ public class Assignment4 {
                 numberOfParkingByArea.add(new Pair(new Integer(rs.getInt("ParkingAreaID")), new Integer(rs.getInt("numParking"))));
             }
         }
-        catch(Exception e){//TODO EARASE
-            System.out.println("Exception");
+        catch(Exception e){
+            e.printStackTrace();
         }
         dM.closeConnection();
         return numberOfParkingByArea;
@@ -268,8 +253,8 @@ public class Assignment4 {
                 numberOfDistinctCars.add(new Pair(new Integer(rs.getInt("ParkingAreaID")), new Integer(rs.getInt("numCID"))));
             }
         }
-        catch(Exception e){//TODO EARASE
-            System.out.println("Exception");
+        catch(Exception e){
+            e.printStackTrace();
         }
         dM.closeConnection();
         return numberOfDistinctCars;

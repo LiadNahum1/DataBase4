@@ -20,8 +20,8 @@ public class DatabaseManagerMSSQLServer extends DatabaseManager {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");//register the driver
             super.startConnection();
         } catch (Exception e) {
-            System.out.println(String.format("Error starting connection to database '%s'", databaseName));
-            System.out.println(e.getMessage());
+            //System.out.println(String.format("Error starting connection to database '%s'", databaseName));
+            //System.out.println(e.getMessage());
         }
     }
 

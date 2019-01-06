@@ -55,11 +55,11 @@ public class DatabaseManager {
     public void startConnection() {
         try {
             conn = DriverManager.getConnection(connectionString, username, password);
-            System.out.println(String.format("Connection established to: '%s'", connectionString));
+            //System.out.println(String.format("Connection established to: '%s'", connectionString));
             selectDatabase(this.databaseName);
         } catch (Exception e) {
-            System.out.println(String.format("Cannot start connection to: %s", connectionString));
-            System.out.println(e.getMessage());
+            //System.out.println(String.format("Cannot start connection to: %s", connectionString));
+            //System.out.println(e.getMessage());
         }
     }
 
@@ -73,10 +73,10 @@ public class DatabaseManager {
             Statement stmt = conn.createStatement();
             stmt.execute("use " + databaseName);
             stmt.close();
-            System.out.println(String.format("Database selected: '%s'", databaseName));
+            //System.out.println(String.format("Database selected: '%s'", databaseName));
         } catch (Exception e) {
-            System.out.println(String.format("Database '%s' not found at: %s", databaseName, connectionString));
-            System.out.println(e.getMessage());
+            //System.out.println(String.format("Database '%s' not found at: %s", databaseName, connectionString));
+            //System.out.println(e.getMessage());
         }
     }
 
@@ -90,11 +90,11 @@ public class DatabaseManager {
             if (conn != null && !conn.isClosed()) {
                 conn.close();
                 conn = null;
-                System.out.println(String.format("Database connection closed!", connectionString));
+                //System.out.println(String.format("Database connection closed!", connectionString));
             }
         } catch (Exception e) {
-            System.out.println(String.format("Error closing connection to: %s", connectionString));
-            System.out.println(e.getMessage());
+            //System.out.println(String.format("Error closing connection to: %s", connectionString));
+            //System.out.println(e.getMessage());
         }
     }
     //</editor-fold>
@@ -112,10 +112,10 @@ public class DatabaseManager {
             try {
                 Statement sqlStatement = conn.createStatement();
                 resultSet = sqlStatement.executeQuery(query); //for return query
-                System.out.println(String.format("Query executed: '%s'", query));
+                //System.out.println(String.format("Query executed: '%s'", query));
             } catch (SQLException e) {
-                System.out.println(String.format("Error executing query: '%s'", query));
-                System.out.println(e.getMessage());
+                //System.out.println(String.format("Error executing query: '%s'", query));
+                //System.out.println(e.getMessage());
             }
         }
         return resultSet;
@@ -125,10 +125,10 @@ public class DatabaseManager {
             try {
                 Statement sqlStatement = conn.createStatement();
                 sqlStatement.execute(query);
-                System.out.println(String.format("Query executed: '%s'", query));
+                //System.out.println(String.format("Query executed: '%s'", query));
             } catch (SQLException e) {
-                System.out.println(String.format("Error executing query: '%s'", query));
-                System.out.println(e.getMessage());
+                //System.out.println(String.format("Error executing query: '%s'", query));
+                //System.out.println(e.getMessage());
             }
         }
     }
